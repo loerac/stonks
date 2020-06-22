@@ -1,0 +1,8 @@
+[
+  {
+    "ticker":"AAPL",
+    "type":"SELL",
+    "price":450,
+    "amount":10
+  }
+]
