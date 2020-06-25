@@ -132,7 +132,7 @@ func main() {
             fmt.Println("Markets are closed...")
         }
 
-        unixFrom := strconv.FormatInt(ts.AddDate(0, 0, -1).UTC().Unix(), 10)
+        unixFrom := strconv.FormatInt(am.AddDate(0, 0, -1).UTC().Unix(), 10)
         unixTo := strconv.FormatInt(ts.UTC().Unix(), 10)
 
         for key, val := range watchlist {
