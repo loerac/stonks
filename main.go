@@ -33,35 +33,6 @@ type Quote struct {
     Error   string    `json:"error"`
 }
 
-type Watchlist struct {
-    Symbol      string
-    CurrPrice   float64
-    Prices      []float64
-    LmtPrice    float64
-    Type        string
-    Average     float64
-    Volume      []int
-    Change      float64
-    ChangePercent float64
-}
-
-func calcAverage(arr []float64) float64 {
-    sum := 0.0
-    for i := 0; i < len(arr); i++ {
-        sum += arr[i]
-    }
-
-    return (sum / float64(len(arr)))
-}
-
-func (wl *Watchlist) printInfo() {
-    fmt.Println("Ticker: " + wl.Symbol)
-    fmt.Println("--- Price:     ", wl.Prices[len(wl.Prices) - 1])
-    fmt.Println("--- Volume:    ", wl.Volume[len(wl.Volume) - 1], (wl.Volume[len(wl.Volume) - 2] - wl.Volume[len(wl.Volume) - 1]))
-    fmt.Printf ("--- Change:     %.5f %.3f%%\n", wl.Change, wl.ChangePercent)
-    fmt.Printf ("--- Average:    %.5f\n", wl.Average)
-}
-
 func main() {
     sapi, err := os.Open("sapi.json")
     if (nil != err) {
@@ -105,8 +76,11 @@ func main() {
         }
     }
 
+
+    go func() { run() }()
     done := make(chan bool)
     for ;; {
+        makeJSONFormat(true)
         NYUTC, _ := time.LoadLocation("America/New_York")
         ts := time.Now().In(NYUTC)
         pm := time.Date(
@@ -131,15 +105,17 @@ func main() {
             fmt.Println("============= After Market hours =============")
         } else {
             fmt.Println("============= Markets are closed =============")
-            // TODO: Check for weekdays
             pm = pm.AddDate(0, 0, 1)
+            if 6 >= int(pm.Weekday()) {
+                pm = pm.AddDate(0, 0, 8 - int(pm.Weekday()))
+            }
+
             diff := pm.Sub(ts)
             fmt.Println("Doing one check, and then sleeping until premarket hours:", pm)
             go func() {
                 <-done
                 time.Sleep(diff)
                 done <- true
-                fmt.Println("PRE-MARKET HOURS", time.Now())
             }()
         }
 
@@ -184,8 +160,10 @@ func main() {
             val.Average = calcAverage(quote.Prices)
             watchlist[key] = val
             val.printInfo()
+            val.makeJSONData()
         }
-        done <- true
+        makeJSONFormat(false)
+        go func() { done <- true }()
         time.Sleep(time.Minute)
         <-done
     }
