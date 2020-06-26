@@ -2,8 +2,6 @@ package main
 
 import (
     "fmt"
-    //"io/ioutil"
-    //"encoding/json"
 )
 
 type Watchlist struct {

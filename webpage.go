@@ -5,12 +5,8 @@ import (
     "encoding/json"
     "log"
     "net/http"
-    //"os"
-    //"time"
 
     "github.com/gorilla/mux"
-    //"github.com/joho/godotenv"
-    //"github.com/davecgh/go-spew/spew"
 )
 
 func run() {
@@ -19,29 +15,7 @@ func run() {
     log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
-/*
-func makeMuxRouter() http.Handler {
-    muxRouter := mux.NewRouter()
-    muxRouter.HandleFunc("/", handleWriteWatchlist).Methods("POST")
-
-    return muxRouter
-}
-*/
-
 func handleWriteWatchlist(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("THis getting called")
-    /*
-    var wl Watchlist
-
-    decoder := json.NewDecoder(r.Body)
-    err := decoder.Decode(&wl)
-    if nil != err {
-        respondWithJSON(w, r, http.StatusBadRequest, r.Body)
-        return
-    }
-    defer r.Body.Close()
-    */
-
     respondWithJSON(w, r, http.StatusCreated, getJSONWatchlist())
 }
 
