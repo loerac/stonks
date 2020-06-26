@@ -134,7 +134,7 @@ func main() {
             // TODO: Check for weekdays
             pm = pm.AddDate(0, 0, 1)
             diff := pm.Sub(ts)
-            fmt.Println("Doing one check, and then sleeping until", pm)
+            fmt.Println("Doing one check, and then sleeping until premarket hours:", pm)
             go func() {
                 <-done
                 time.Sleep(diff)
