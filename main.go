@@ -105,31 +105,42 @@ func main() {
         }
     }
 
+    done := make(chan bool)
     for ;; {
-        loc, _ := time.LoadLocation("America/New_York")
-        ts := time.Now().In(loc)
-        am := time.Date(
-            ts.Year(), ts.Month(), ts.Day(), 15, 30, 00, 0, time.UTC,
-        )
+        NYUTC, _ := time.LoadLocation("America/New_York")
+        ts := time.Now().In(NYUTC)
         pm := time.Date(
-            ts.Year(), ts.Month(), ts.Day(), 4, 30, 00, 0, time.UTC,
+            ts.Year(), ts.Month(), ts.Day(), 4, 00, 00, 00, NYUTC,
         )
         om := time.Date(
-            ts.Year(), ts.Month(), ts.Day(), 9, 30, 00, 0, time.UTC,
+            ts.Year(), ts.Month(), ts.Day(), 9, 30, 00, 00, NYUTC,
+        )
+        am := time.Date(
+            ts.Year(), ts.Month(), ts.Day(), 15, 30, 00, 00, NYUTC,
         )
         cm := time.Date(
-            ts.Year(), ts.Month(), ts.Day(), 20, 0, 00, 0, time.UTC,
+            ts.Year(), ts.Month(), ts.Day(), 20, 00, 00, 00, NYUTC,
         )
-        cm = cm.AddDate(0, 0, 1)
 
+        // TODO: Print this only once
         if ts.After(pm) && ts.Before(om) {
-            fmt.Println("Pre Market hours...")
+            fmt.Println("============== Pre Market hours ==============")
         } else if ts.After(om) && ts.Before(am) {
-            fmt.Println("Market Hours...")
+            fmt.Println("================ Market Hours ================")
         } else if ts.After(am) && ts.Before(cm) {
-            fmt.Println("After Market hours....")
+            fmt.Println("============= After Market hours =============")
         } else {
-            fmt.Println("Markets are closed...")
+            fmt.Println("============= Markets are closed =============")
+            // TODO: Check for weekdays
+            pm = pm.AddDate(0, 0, 1)
+            diff := pm.Sub(ts)
+            fmt.Println("Doing one check, and then sleeping until", pm)
+            go func() {
+                <-done
+                time.Sleep(diff)
+                done <- true
+                fmt.Println("PRE-MARKET HOURS", time.Now())
+            }()
         }
 
         unixFrom := strconv.FormatInt(am.AddDate(0, 0, -1).UTC().Unix(), 10)
@@ -137,8 +148,8 @@ func main() {
 
         for key, val := range watchlist {
             var quote Quote
-            url := api.URL + "stock/candle?symbol=" + key + "&resolution=1&from=" + unixFrom + "&to=" + unixTo + "&token=" + api.Key
 
+            url := api.URL + "stock/candle?symbol=" + key + "&resolution=1&from=" + unixFrom + "&to=" + unixTo + "&token=" + api.Key
             req, err := http.NewRequest("GET", url, nil)
             if nil != err {
                 fmt.Println("--> Couldn't set 'GET' request for " + key + "...skipping");
@@ -158,8 +169,10 @@ func main() {
             body, _ := ioutil.ReadAll(res.Body)
             json.Unmarshal(body, &quote)
             if quote.Error != "" {
+                fmt.Println("--> Error: " + quote.Error)
+                continue
+            } else if 0 == len(quote.Prices) {
                 fmt.Println("--> Couldn't get data for " + key +  "...skipping")
-                fmt.Println("Error: " + quote.Error)
                 continue
             }
 
@@ -172,7 +185,9 @@ func main() {
             watchlist[key] = val
             val.printInfo()
         }
+        done <- true
         time.Sleep(time.Minute)
+        <-done
     }
 }
 
