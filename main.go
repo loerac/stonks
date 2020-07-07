@@ -48,6 +48,9 @@ func main() {
     }
     defer sticker.Close()
 
+    Setxattr("stickers.json", USER + TICKER + LIST, UPTODATE)
+    MonitorJSON()
+
     sapiVal, _ := ioutil.ReadAll(sapi)
     stickerVal, _ := ioutil.ReadAll(sticker)
 
@@ -90,13 +93,12 @@ func main() {
             ts.Year(), ts.Month(), ts.Day(), 9, 30, 00, 00, NYUTC,
         )
         am := time.Date(
-            ts.Year(), ts.Month(), ts.Day(), 15, 30, 00, 00, NYUTC,
+            ts.Year(), ts.Month(), ts.Day(), 15, 00, 00, 00, NYUTC,
         )
         cm := time.Date(
             ts.Year(), ts.Month(), ts.Day(), 20, 00, 00, 00, NYUTC,
         )
 
-        // TODO: Print this only once
         if ts.After(pm) && ts.Before(om) {
             fmt.Println("============== Pre Market hours ==============")
         } else if ts.After(om) && ts.Before(am) {
